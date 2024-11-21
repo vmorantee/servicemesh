@@ -10,6 +10,21 @@ public class FileUploadService extends Microservice implements Runnable {
     private boolean isRunning;
     private ServerSocket serverSocket;
 
+    public static void main(String[] args)
+    {
+        if(args.length != 2)
+            System.exit(100);
+
+        FileUploadService l = new FileUploadService(args[0], args[1]);
+
+        try {
+            l.start();
+        } catch (Exception e)
+        {
+            System.out.println(e.getMessage());
+        }
+    }
+
     public FileUploadService(String ipAddress, String port) {
         super(ipAddress, port);
     }

@@ -6,6 +6,21 @@ public class LoginService extends Microservice implements Runnable {
     private boolean isRunning;
     private ServerSocket serverSocket;
 
+    public static void main(String[] args)
+    {
+        if(args.length != 2)
+            System.exit(100);
+
+        LoginService l = new LoginService(args[0], args[1]);
+
+        try {
+            l.start();
+        } catch (Exception e)
+        {
+            System.out.println(e.getMessage());
+        }
+    }
+
     public LoginService(String ipAddress, String port) {
         super(ipAddress,port);
     }

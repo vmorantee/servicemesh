@@ -7,9 +7,11 @@ import java.io.ObjectOutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
 
-public class Agent implements Runnable
+public class ServiceAgent implements Runnable
 {
     private String ipAddress;
     private String port;
@@ -17,7 +19,7 @@ public class Agent implements Runnable
     private ServerSocket serverSocket;
     private Map<String, ServiceInfo> activeServices = new ConcurrentHashMap<>();
 
-    public Agent(String ipAddress, String port)
+    public ServiceAgent(String ipAddress, String port)
     {
         this.ipAddress = ipAddress;
         this.port = port;
@@ -69,6 +71,8 @@ public class Agent implements Runnable
             
             ServiceInfo info = activeServices.get(request.getContent("serviceName").getEntryContent());
 
+            int servicePort = 8080; //Port domyślny
+
             if(info == null)
             {
                 File mainFile = new File("services");
@@ -84,12 +88,20 @@ public class Agent implements Runnable
                     }
                 }
 
+                //Znajdowanie wolnego portu
+                Set<String> usedPorts = activeServices.values().stream().map(ServiceInfo::getPort).collect(Collectors.toSet()); //Tworzymy set zawierający wszystkie zajęte porty
+                while(usedPorts.contains(Integer.toString(servicePort)))
+                    servicePort++;
+
                 //Start service (java file)
                 //if !service.isRunning() throw exception czy coś idk xd
             }
 
+            else
+                servicePort = Integer.parseInt(info.getPort());
+
             response.addEntry("Adress", ipAddress);
-            response.addEntry("port", port);
+            response.addEntry("port", Integer.toString(servicePort));
             response.setMessageCode("200");
 
 
