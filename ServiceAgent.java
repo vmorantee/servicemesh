@@ -127,3 +127,17 @@ public class ServiceAgent implements Runnable
         }
     }
 }
+
+
+//CLI wysyła do API Gatewaya zapytanie o wykonanie procesu z danego serwisu
+    //Musi wysłać informację o rodzaju nazwie serwisu i potrzebne do jego wykonania informacje
+//AG wysyła do managera info że potrzebny jest dany serwis
+    //Potrzebna tylko nazwa
+//Manager wysyła do AgentaAPI pytanie o ten serwis
+    //Nadal tylko nazwa
+//AgentAPI odsyła info o adresie i porcie potrzebnego serwisu
+//Manager wysyła to do AG
+//AG przekazuje żądanie do serwisu
+    //Dane niezbędne do wykonania żądania
+//serwis odpowiada AG
+//AG przekazuje odpowiedź do CLI
