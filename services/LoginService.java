@@ -1,6 +1,11 @@
+package services;
+
 import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
+
+import dependencies.Microservice;
+import dependencies.Request;
 
 public class LoginService extends Microservice implements Runnable {
     private boolean isRunning;

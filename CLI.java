@@ -4,6 +4,12 @@ import java.util.Arrays;
 import java.util.Base64;
 import java.util.Scanner;
 
+import services.FileUploadService;
+import services.LoginService;
+import services.RegistrationService;
+
+import dependencies.*;
+
 public class CLI {
     private Scanner scanner;
     private String apiIP, apiPort;

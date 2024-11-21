@@ -1,6 +1,4 @@
-import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileReader;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
@@ -10,6 +8,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
+
+import dependencies.*;
 
 public class ServiceAgent implements Runnable
 {
@@ -89,19 +89,24 @@ public class ServiceAgent implements Runnable
                 }
 
                 //Znajdowanie wolnego portu
-                Set<String> usedPorts = activeServices.values().stream().map(ServiceInfo::getPort).collect(Collectors.toSet()); //Tworzymy set zawierający wszystkie zajęte porty
+                Set<String> usedPorts = activeServices.values().stream().map(ServiceInfo::getPort).collect(Collectors.toSet()); //Set zawierający wszystkie zajęte porty
                 while(usedPorts.contains(Integer.toString(servicePort)))
                     servicePort++;
 
                 //Start service (java file)
-                //if !service.isRunning() throw exception czy coś idk xd
+                //if !service.isRunning() throw exception / status 100
+
+                info = new ServiceInfo(ipAddress, Integer.toString(servicePort));
+                activeServices.put(request.getContent("serviceName").getEntryContent(), info);
             }
 
             else
                 servicePort = Integer.parseInt(info.getPort());
 
-            response.addEntry("Adress", ipAddress);
-            response.addEntry("port", Integer.toString(servicePort));
+            info.IncClientsNumber();
+
+            response.addEntry("Adress", info.getAddress());
+            response.addEntry("port", info.getPort());
             response.setMessageCode("200");
 
 

@@ -1,3 +1,4 @@
+package dependencies;
 import java.io.Serializable;
 
 public class RequestEntry implements Serializable{

@@ -1,6 +1,10 @@
+package services;
+
 import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
+
+import dependencies.*;
 
 public class RegistrationService extends Microservice implements Runnable {
     private boolean isRunning;

@@ -1,3 +1,5 @@
+package services;
+
 import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -5,6 +7,9 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Base64;
+
+import dependencies.Microservice;
+import dependencies.Request;
 
 public class FileUploadService extends Microservice implements Runnable {
     private boolean isRunning;
@@ -79,8 +84,8 @@ public class FileUploadService extends Microservice implements Runnable {
             while (true) {
                 Request request = (Request) objectInputStream.readObject();
                     if (fileName == null) {
-                        fileName = request.getContent("filename").entryContent;
-                        totalPackages = Integer.parseInt(request.getContent("total_packages").entryContent);
+                        fileName = request.getContent("filename").getEntryContent();
+                        totalPackages = Integer.parseInt(request.getContent("total_packages").getEntryContent());
                         username = request.getContent("username").getEntryContent();
                         Path userDir = Paths.get("uploads", username);
                         if (Files.notExists(userDir)) {
@@ -93,7 +98,7 @@ public class FileUploadService extends Microservice implements Runnable {
                         }
                         fos = new FileOutputStream(userDir.resolve(fileName).toString());
                     }
-                    String packageData = request.getContent("data").entryContent;
+                    String packageData = request.getContent("data").getEntryContent();
                     byte[] decodedData = Base64.getDecoder().decode(packageData);
                     fos.write(decodedData);
                     receivedPackages++;
