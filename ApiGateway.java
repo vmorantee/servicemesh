@@ -134,4 +134,10 @@ public class ApiGateway implements Runnable {
             return socket != null && !socket.isClosed();
         }
     }
+
+    public static void main(String[] args) {
+        ApiGateway api = new ApiGateway("127.0.0.1","8084");
+        api.start();
+        api.run();
+    }
 }

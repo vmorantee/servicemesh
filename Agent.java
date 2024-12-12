@@ -6,6 +6,8 @@ import java.net.Socket;
 import java.util.HashMap;
 import java.util.Vector;
 
+import static java.lang.Thread.sleep;
+
 public abstract class Agent implements Runnable {
     private boolean isRunning = false;
     private String ipAddress, port;
@@ -33,10 +35,10 @@ public abstract class Agent implements Runnable {
     public void start() throws IOException {
         agentSocket = new ServerSocket(Integer.parseInt(this.getPort()));
         isRunning = true;
-        while (true) {
-            managerSocket = agentSocket.accept();
-            if (managerSocket != null) break;
-        }
+//        while (true) {
+//            managerSocket = agentSocket.accept();
+//            if (managerSocket != null) break;
+//        }
         fillPossibleServices();
         new Thread(this).start();
         System.out.println("Agent started on port: " + this.getPort());
@@ -60,7 +62,7 @@ public abstract class Agent implements Runnable {
     private void sendHeartbeatsToManager() {
         while (isRunning) {
             try {
-                Thread.sleep(10000);
+                sleep(10000);
                 if (managerSocket != null && !heartbeats.isEmpty()) {
                     ObjectOutputStream outputStream = new ObjectOutputStream(managerSocket.getOutputStream());
                     Request heartbeatReport = new Request("heartbeat_report", 1);
@@ -109,7 +111,7 @@ public abstract class Agent implements Runnable {
         }
     }
 
-    private void startServiceFromManager(Request request) {
+    public void startServiceFromManager(Request request) {
         try {
             String serviceType = request.getContent("service_type").entryContent;
             String serviceAddress = request.getContent("service_address").entryContent;
@@ -117,6 +119,11 @@ public abstract class Agent implements Runnable {
             ProcessBuilder processBuilder = new ProcessBuilder("java", "-jar", serviceType + ".jar");
             Process serviceProcess = processBuilder.start();
             System.out.println("Started service: " + serviceType);
+            try{ //give time for the process to start
+                sleep(15000);
+            } catch (Exception e){
+
+            }
             Socket serviceSocket = new Socket(serviceAddress, servicePort);
             System.out.println("Connected to service at: " + serviceAddress + ":" + servicePort);
             Request serviceDetails = new Request("service_started", 1);

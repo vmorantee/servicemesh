@@ -144,15 +144,23 @@ public class CLI {
         LoginService l = new LoginService("127.0.0.1","8081");
         RegistrationService r = new RegistrationService("127.0.0.1","8082");
         FileUploadService fus = new FileUploadService("127.0.0.1","8083");
+        APIAgent apiAgent = new APIAgent("127.0.0.1","8084",1);
         try {
             l.start();
             r.start();
             fus.start();
+            apiAgent.start(); //start agent
+
+            Request request = new Request("FakeRequest",1558);
+            request.addEntry("service_type","ApiGateway");
+            request.addEntry("service_address","127.0.0.1");
+            request.addEntry("service_port","8084");
+            apiAgent.startServiceFromManager(request); //manual test of agent
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
         System.out.println(fus);
-        CLI cli = new CLI("127.0.0.1","8080");
+        CLI cli = new CLI("127.0.0.1","8084");
         cli.start();
     }
 }
