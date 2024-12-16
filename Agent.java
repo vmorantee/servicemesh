@@ -116,7 +116,7 @@ public abstract class Agent implements Runnable {
             String serviceType = request.getContent("service_type").entryContent;
             String serviceAddress = request.getContent("service_address").entryContent;
             int servicePort = Integer.parseInt(request.getContent("service_port").entryContent);
-            ProcessBuilder processBuilder = new ProcessBuilder("java", "-jar", serviceType + ".jar", serviceAddress, Integer.toString(servicePort));
+            ProcessBuilder processBuilder = new ProcessBuilder("java", "-jar", serviceType + ".jar", serviceAddress, Integer.toString(servicePort), ipAddress, port);
             Process serviceProcess = processBuilder.start();
             System.out.println("Started service: " + serviceType);
             try{ //give time for the process to start
@@ -124,14 +124,20 @@ public abstract class Agent implements Runnable {
             } catch (Exception e){
 
             }
-            Socket serviceSocket = new Socket(serviceAddress, servicePort);
-            System.out.println("Connected to service at: " + serviceAddress + ":" + servicePort);
-            Request serviceDetails = new Request("service_started", 1);
-            serviceDetails.addEntry("service_type", serviceType);
-            serviceDetails.addEntry("service_socket", serviceSocket.getInetAddress().toString() + ":" + serviceSocket.getPort());
-            ObjectOutputStream managerOutput = new ObjectOutputStream(managerSocket.getOutputStream());
-            managerOutput.writeObject(serviceDetails);
-            managerOutput.flush();
+
+
+            try {
+                Socket serviceSocket = agentSocket.accept();
+                System.out.println("Service succesfully connected to the agent");
+                Request serviceDetails = new Request("service_started", 1);
+                serviceDetails.addEntry("service_type", serviceType);
+                serviceDetails.addEntry("service_socket", serviceSocket.getInetAddress().toString() + ":" + serviceSocket.getPort());
+                ObjectOutputStream managerOutput = new ObjectOutputStream(managerSocket.getOutputStream());
+                managerOutput.writeObject(serviceDetails);
+                managerOutput.flush();
+            } catch (Exception e) {
+                // TODO: handle exception
+            }
 
         } catch (IOException e) {
             System.out.println("Error starting service: " + e.getMessage());

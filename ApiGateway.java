@@ -4,10 +4,10 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class ApiGateway implements Runnable {
-    private String ipAddress;
-    private String port;
+    private String ipAddress, agentIpAddress;
+    private String port, agentPort;
     private boolean isRunning;
-    private ServerSocket serverSocket;
+    private Socket agentSocket;
     private Map<String, ServiceConnection> activeConnections = new ConcurrentHashMap<>();
 
     public ApiGateway(String ipAddress, String port) {
@@ -24,8 +24,8 @@ public class ApiGateway implements Runnable {
     public void stop() {
         isRunning = false;
         try {
-            if (serverSocket != null && !serverSocket.isClosed()) {
-                serverSocket.close();
+            if (agentSocket != null && !agentSocket.isClosed()) {
+                agentSocket.close();
             }
         } catch (IOException e) {
             System.out.println("Error closing server socket: " + e.getMessage());
@@ -33,17 +33,18 @@ public class ApiGateway implements Runnable {
         System.out.println("API Gateway stopped.");
     }
 
+    public void setAgentConnectionInfo(String ip, String port)
+    {
+        agentIpAddress = ip;
+        agentPort = port;
+    }
+
     @Override
     public void run() {
         try {
-            serverSocket = new ServerSocket(Integer.parseInt(port));
-            System.out.println("API Gateway listening on port " + port);
-
-            while (isRunning) {
-                Socket clientSocket = serverSocket.accept();
-                System.out.println("Accepted connection from " + clientSocket.getInetAddress());
-                new Thread(() -> handleClientConnection(clientSocket)).start();
-            }
+            agentSocket = new Socket(agentIpAddress, Integer.parseInt(agentPort));
+            System.out.println("Connected to Service Manager at " + agentIpAddress + ":" + agentPort);
+            new Thread(() -> handleClientConnection(agentSocket)).start();
         } catch (IOException e) {
             System.out.println("Error starting API Gateway: " + e.getMessage());
         }
@@ -137,6 +138,7 @@ public class ApiGateway implements Runnable {
 
     public static void main(String[] args) {
         ApiGateway api = new ApiGateway(args[0],args[1]);
+        api.setAgentConnectionInfo(args[2], args[3]);
         api.start();
         api.run();
     }
