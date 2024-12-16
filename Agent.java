@@ -124,20 +124,14 @@ public abstract class Agent implements Runnable {
             } catch (Exception e){
 
             }
-
-
-            try {
-                Socket serviceSocket = agentSocket.accept();
-                System.out.println("Service succesfully connected to the agent");
-                Request serviceDetails = new Request("service_started", 1);
-                serviceDetails.addEntry("service_type", serviceType);
-                serviceDetails.addEntry("service_socket", serviceSocket.getInetAddress().toString() + ":" + serviceSocket.getPort());
-                ObjectOutputStream managerOutput = new ObjectOutputStream(managerSocket.getOutputStream());
-                managerOutput.writeObject(serviceDetails);
-                managerOutput.flush();
-            } catch (Exception e) {
-                // TODO: handle exception
-            }
+            Socket serviceSocket = agentSocket.accept();
+            System.out.println("Service succesfully connected to the agent");
+            Request serviceDetails = new Request("service_started", 1);
+            serviceDetails.addEntry("service_type", serviceType);
+            serviceDetails.addEntry("service_socket", serviceSocket.getInetAddress().toString() + ":" + serviceSocket.getPort());
+            ObjectOutputStream managerOutput = new ObjectOutputStream(managerSocket.getOutputStream());
+            managerOutput.writeObject(serviceDetails);
+            managerOutput.flush();
 
         } catch (IOException e) {
             System.out.println("Error starting service: " + e.getMessage());
