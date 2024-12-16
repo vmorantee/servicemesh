@@ -136,7 +136,7 @@ public class ApiGateway implements Runnable {
     }
 
     public static void main(String[] args) {
-        ApiGateway api = new ApiGateway("127.0.0.1","8084");
+        ApiGateway api = new ApiGateway(args[0],args[1]);
         api.start();
         api.run();
     }

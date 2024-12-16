@@ -116,7 +116,7 @@ public abstract class Agent implements Runnable {
             String serviceType = request.getContent("service_type").entryContent;
             String serviceAddress = request.getContent("service_address").entryContent;
             int servicePort = Integer.parseInt(request.getContent("service_port").entryContent);
-            ProcessBuilder processBuilder = new ProcessBuilder("java", "-jar", serviceType + ".jar");
+            ProcessBuilder processBuilder = new ProcessBuilder("java", "-jar", serviceType + ".jar", serviceAddress, Integer.toString(servicePort));
             Process serviceProcess = processBuilder.start();
             System.out.println("Started service: " + serviceType);
             try{ //give time for the process to start
