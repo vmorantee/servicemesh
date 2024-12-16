@@ -1,4 +1,6 @@
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.ServerSocket;
@@ -15,7 +17,7 @@ public abstract class Agent implements Runnable {
     private Vector<String> possibleServices = new Vector<>();
     private HashMap<Socket, Request> heartbeats = new HashMap<>();
     private Socket managerSocket;
-    private ServerSocket agentSocket;
+    private ServerSocket agentSocket, newServiceSocket;
 
     public abstract String getAgentName();
 
@@ -34,6 +36,7 @@ public abstract class Agent implements Runnable {
 
     public void start() throws IOException {
         agentSocket = new ServerSocket(Integer.parseInt(this.getPort()));
+        newServiceSocket = new ServerSocket(8085);
         isRunning = true;
 //        while (true) {
 //            managerSocket = agentSocket.accept();
@@ -116,15 +119,23 @@ public abstract class Agent implements Runnable {
             String serviceType = request.getContent("service_type").entryContent;
             String serviceAddress = request.getContent("service_address").entryContent;
             int servicePort = Integer.parseInt(request.getContent("service_port").entryContent);
-            ProcessBuilder processBuilder = new ProcessBuilder("java", "-jar", serviceType + ".jar", serviceAddress, Integer.toString(servicePort), ipAddress, port);
+            ProcessBuilder processBuilder = new ProcessBuilder("java", "-jar", serviceType + ".jar", serviceAddress, Integer.toString(servicePort), ipAddress, "8085"); //TODO zamienić port na zmienną
             Process serviceProcess = processBuilder.start();
+
             System.out.println("Started service: " + serviceType);
             try{ //give time for the process to start
                 sleep(15000);
             } catch (Exception e){
-
             }
-            Socket serviceSocket = agentSocket.accept();
+            // Odczytanie standardowego wyjścia (stdout) procesu
+            BufferedReader reader = new BufferedReader(new InputStreamReader(serviceProcess.getInputStream()));
+            String line;
+            
+            // Wypisanie każdej linii z stdout procesu
+            while ((line = reader.readLine()) != null) {
+                System.out.println(line);
+            }
+            Socket serviceSocket = newServiceSocket.accept();
             System.out.println("Service succesfully connected to the agent");
             Request serviceDetails = new Request("service_started", 1);
             serviceDetails.addEntry("service_type", serviceType);

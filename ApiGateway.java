@@ -137,6 +137,7 @@ public class ApiGateway implements Runnable {
     }
 
     public static void main(String[] args) {
+        System.out.println("siema");
         ApiGateway api = new ApiGateway(args[0],args[1]);
         api.setAgentConnectionInfo(args[2], args[3]);
         api.start();

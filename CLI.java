@@ -139,8 +139,6 @@ public class CLI {
         }
     }
     public static void main(String[] args) {
-        ApiGateway apiGateway = new ApiGateway("127.0.0.1", "8080");
-        apiGateway.start();
         LoginService l = new LoginService("127.0.0.1","8081");
         RegistrationService r = new RegistrationService("127.0.0.1","8082");
         FileUploadService fus = new FileUploadService("127.0.0.1","8083");
