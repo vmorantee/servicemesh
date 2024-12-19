@@ -42,7 +42,7 @@ public abstract class Agent implements Runnable {
 //            managerSocket = agentSocket.accept();
 //            if (managerSocket != null) break;
 //        }
-        fillPossibleServices();
+        possibleServices = fillPossibleServices();
         new Thread(this).start();
         System.out.println("Agent started on port: " + this.getPort());
     }
@@ -60,7 +60,7 @@ public abstract class Agent implements Runnable {
         }
     }
 
-    public abstract void fillPossibleServices();
+    public abstract Vector<String> fillPossibleServices();
 
     private void sendHeartbeatsToManager() {
         while (isRunning) {

@@ -1,3 +1,5 @@
+import java.util.Vector;
+
 public class APIAgent extends Agent{
 
     int agentIndex;
@@ -12,7 +14,9 @@ public class APIAgent extends Agent{
     }
 
     @Override
-    public void fillPossibleServices() {
-
+    public Vector<String> fillPossibleServices() {
+        Vector<String> possibleServices = new Vector<>();
+        possibleServices.add("ApiGateway");
+        return possibleServices;
     }
 }
