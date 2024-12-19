@@ -111,6 +111,13 @@ public class FileUploadService extends Microservice implements Runnable {
         }
     }
 
-
+    public static void main(String[] args) {
+        FileUploadService fus = new FileUploadService(args[0],args[1]);
+        try {
+            fus.start();
+        } catch (Exception e){
+            System.out.println(e);
+        }
+    }
 
 }

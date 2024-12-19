@@ -92,4 +92,13 @@ public class LoginService extends Microservice implements Runnable {
             }
         }
     }
+
+    public static void main(String[] args) {
+        LoginService ls = new LoginService(args[0],args[1]);
+        try {
+            ls.start();
+        } catch (Exception e){
+            System.out.println(e);
+        }
+    }
 }
