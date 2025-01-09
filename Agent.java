@@ -119,30 +119,30 @@ public abstract class Agent implements Runnable {
             String serviceType = request.getContent("service_type").entryContent;
             String serviceAddress = request.getContent("service_address").entryContent;
             int servicePort = Integer.parseInt(request.getContent("service_port").entryContent);
-            ProcessBuilder processBuilder = new ProcessBuilder("java", "-jar", serviceType + ".jar", serviceAddress, Integer.toString(servicePort), ipAddress, "8085"); //TODO zamienić port na zmienną
+            ProcessBuilder processBuilder = new ProcessBuilder("java", "-jar", serviceType + ".jar", serviceAddress, Integer.toString(servicePort), ipAddress, port); //TODO zamienić port na zmienną
             Process serviceProcess = processBuilder.start();
 
-            System.out.println("Started service: " + serviceType);
+            System.out.println("Started service: " + serviceType+serviceAddress+servicePort);
             try{ //give time for the process to start
-                sleep(15000);
+                sleep(5000);
             } catch (Exception e){
             }
             // Odczytanie standardowego wyjścia (stdout) procesu
-            BufferedReader reader = new BufferedReader(new InputStreamReader(serviceProcess.getInputStream()));
-            String line;
+            //BufferedReader reader = new BufferedReader(new InputStreamReader(serviceProcess.getInputStream()));
+            //String line;
             
             // Wypisanie każdej linii z stdout procesu
-            while ((line = reader.readLine()) != null) {
-                System.out.println(line);
-            }
-            Socket serviceSocket = newServiceSocket.accept();
+//            while ((line = reader.readLine()) != null) {
+//                System.out.println(line);
+//            }
+            //Socket serviceSocket = newServiceSocket.accept(); // PROBLEM HERE !!!!!!!!!
             System.out.println("Service succesfully connected to the agent");
             Request serviceDetails = new Request("service_started", 1);
             serviceDetails.addEntry("service_type", serviceType);
-            serviceDetails.addEntry("service_socket", serviceSocket.getInetAddress().toString() + ":" + serviceSocket.getPort());
-            ObjectOutputStream managerOutput = new ObjectOutputStream(managerSocket.getOutputStream());
-            managerOutput.writeObject(serviceDetails);
-            managerOutput.flush();
+            //serviceDetails.addEntry("service_socket", serviceSocket.getInetAddress().toString() + ":" + serviceSocket.getPort());
+//            ObjectOutputStream managerOutput = new ObjectOutputStream(managerSocket.getOutputStream());
+//            managerOutput.writeObject(serviceDetails);
+//            managerOutput.flush();
 
         } catch (IOException e) {
             System.out.println("Error starting service: " + e.getMessage());

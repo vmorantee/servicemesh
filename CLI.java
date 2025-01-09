@@ -123,7 +123,7 @@ public class CLI {
             loginRequest.addEntry("login", username);
             loginRequest.addEntry("password", password);
             ObjectOutputStream outputStream = new ObjectOutputStream(connection.getOutputStream());
-            ObjectInputStream inputStream = new ObjectInputStream(connection.getInputStream());
+            ObjectInputStream inputStream = new ObjectInputStream(connection.getInputStream()); // TU PROBLEM
             outputStream.writeObject(loginRequest);
             outputStream.flush();
             Request response = (Request) inputStream.readObject();
@@ -142,7 +142,7 @@ public class CLI {
         LoginService l = new LoginService("127.0.0.1","8081");
         RegistrationService r = new RegistrationService("127.0.0.1","8082");
         FileUploadService fus = new FileUploadService("127.0.0.1","8083");
-        APIAgent apiAgent = new APIAgent("127.0.0.1","8084",1);
+        APIAgent apiAgent = new APIAgent("127.0.0.1","8086",1);
         try {
             l.start();
             r.start();
@@ -152,13 +152,13 @@ public class CLI {
             Request request = new Request("FakeRequest",1558);
             request.addEntry("service_type","ApiGateway");
             request.addEntry("service_address","127.0.0.1");
-            request.addEntry("service_port","8084");
+            request.addEntry("service_port","8087");
             apiAgent.startServiceFromManager(request); //manual test of agent
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
         System.out.println(fus);
-        CLI cli = new CLI("127.0.0.1","8084");
+        CLI cli = new CLI("127.0.0.1","8087");
         cli.start();
     }
 }
