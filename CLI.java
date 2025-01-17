@@ -119,7 +119,7 @@ public class CLI {
             String username = scanner.nextLine();
             System.out.print("Enter password: ");
             String password = scanner.nextLine();
-            Request loginRequest = new Request("login", reqID++);
+            Request loginRequest = new Request("Login", reqID++);
             loginRequest.addEntry("login", username);
             loginRequest.addEntry("password", password);
             ObjectOutputStream outputStream = new ObjectOutputStream(connection.getOutputStream());
@@ -139,21 +139,12 @@ public class CLI {
         }
     }
     public static void main(String[] args) {
-        LoginService l = new LoginService("127.0.0.1","8081");
         RegistrationService r = new RegistrationService("127.0.0.1","8082");
         FileUploadService fus = new FileUploadService("127.0.0.1","8083");
-        APIAgent apiAgent = new APIAgent("127.0.0.1","8086",1);
         try {
-            l.start();
             r.start();
             fus.start();
-            apiAgent.start(); //start agent
 
-            Request request = new Request("FakeRequest",1558);
-            request.addEntry("service_type","ApiGateway");
-            request.addEntry("service_address","127.0.0.1");
-            request.addEntry("service_port","8087");
-            apiAgent.startServiceFromManager(request); //manual test of agent
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

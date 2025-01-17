@@ -17,7 +17,8 @@ public abstract class Agent implements Runnable {
     private Vector<String> possibleServices = new Vector<>();
     private HashMap<Socket, Request> heartbeats = new HashMap<>();
     private Socket managerSocket;
-    private ServerSocket agentSocket, newServiceSocket;
+    private ServerSocket agentSocket;
+    private ServerSocket newServiceSocket;
 
     public abstract String getAgentName();
 
@@ -36,7 +37,7 @@ public abstract class Agent implements Runnable {
 
     public void start() throws IOException {
         agentSocket = new ServerSocket(Integer.parseInt(this.getPort()));
-        newServiceSocket = new ServerSocket(8085);
+        newServiceSocket = new ServerSocket(Integer.parseInt(this.getPort())+1);
         isRunning = true;
 //        while (true) {
 //            managerSocket = agentSocket.accept();
@@ -128,18 +129,18 @@ public abstract class Agent implements Runnable {
             } catch (Exception e){
             }
             // Odczytanie standardowego wyjścia (stdout) procesu
-            //BufferedReader reader = new BufferedReader(new InputStreamReader(serviceProcess.getInputStream()));
-            //String line;
+            BufferedReader reader = new BufferedReader(new InputStreamReader(serviceProcess.getInputStream()));
+            String line;
             
             // Wypisanie każdej linii z stdout procesu
-//            while ((line = reader.readLine()) != null) {
-//                System.out.println(line);
-//            }
-            //Socket serviceSocket = newServiceSocket.accept(); // PROBLEM HERE !!!!!!!!!
+            while ((line = reader.readLine()) != null) {
+                System.out.println(line);
+            }
+            Socket serviceSocket = newServiceSocket.accept(); // PROBLEM HERE !!!!!!!!!
             System.out.println("Service succesfully connected to the agent");
             Request serviceDetails = new Request("service_started", 1);
             serviceDetails.addEntry("service_type", serviceType);
-            //serviceDetails.addEntry("service_socket", serviceSocket.getInetAddress().toString() + ":" + serviceSocket.getPort());
+            serviceDetails.addEntry("service_socket", serviceSocket.getInetAddress().toString() + ":" + serviceSocket.getPort());
 //            ObjectOutputStream managerOutput = new ObjectOutputStream(managerSocket.getOutputStream());
 //            managerOutput.writeObject(serviceDetails);
 //            managerOutput.flush();
