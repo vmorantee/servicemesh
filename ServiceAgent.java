@@ -3,8 +3,8 @@ import java.util.Vector;
 public class ServiceAgent extends Agent{
 
     int agentIndex;
-    public ServiceAgent(String ipAddress, String port, int index) {
-        super(ipAddress, port);
+    public ServiceAgent(String ipAddress, String port, String managerIp,int managerPort,int index) {
+        super(ipAddress, port,managerIp,managerPort);
         agentIndex = index;
     }
 

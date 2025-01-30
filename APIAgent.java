@@ -3,8 +3,9 @@ import java.util.Vector;
 public class APIAgent extends Agent{
 
     int agentIndex;
-    public APIAgent(String ipAddress, String port, int index) {
-        super(ipAddress, port);
+    public APIAgent(String agentIpAddress, String agentPort,
+                    String managerIpAddress, int managerPort, int index,String apiAdress,int apiPort) {
+        super(agentIpAddress, agentPort, managerIpAddress, managerPort);
         agentIndex = index;
     }
 

@@ -8,6 +8,7 @@ public class ApiGateway implements Runnable {
     private String port, agentPort;
     private boolean isRunning;
     private Socket agentSocket;
+    private ServerSocket apiSocket;
     private Map<String, ServiceConnection> activeConnections = new ConcurrentHashMap<>();
 
     public ApiGateway(String ipAddress, String port) {
@@ -42,20 +43,41 @@ public class ApiGateway implements Runnable {
     @Override
     public void run() {
         try {
+            //Polacz sie wlasciwie kurwa z agentem
             agentSocket = new Socket(agentIpAddress, Integer.parseInt(agentPort));
+
             System.out.println("Connected to Service Manager at " + agentIpAddress + ":" + agentPort);
+            System.out.println("Api gateway started (run())");
+
             new Thread(() -> handleClientConnection(agentSocket)).start();
+
+            try {
+                apiSocket = new ServerSocket(Integer.parseInt(port));
+                System.out.println("API Gateway listening on port " + port);
+
+                while (isRunning) {
+                    Socket clientSocket = apiSocket.accept();
+                    System.out.println("Accepted connection from " + clientSocket.getInetAddress());
+                    new Thread(() -> handleClientConnection(clientSocket)).start();
+                }
+            } catch (IOException e) {
+                System.out.println("Error starting API Gateway: " + e.getMessage());
+            }
+
         } catch (IOException e) {
             System.out.println("Error starting API Gateway: " + e.getMessage());
         }
     }
 
     private void handleClientConnection(Socket clientSocket) {
+        System.out.println("Dziala?");
+
         try (
                 ObjectInputStream clientInputStream = new ObjectInputStream(clientSocket.getInputStream());
                 ObjectOutputStream clientOutputStream = new ObjectOutputStream(clientSocket.getOutputStream())
         ) {
             while (true) {
+                System.out.println("Dziala?22");
                 try {
                     Request clientRequest = (Request) clientInputStream.readObject();
                     System.out.println("Received Request: " + clientRequest);
@@ -141,6 +163,8 @@ public class ApiGateway implements Runnable {
         ApiGateway api = new ApiGateway(args[0],args[1]);
         api.setAgentConnectionInfo(args[2], args[3]);
         api.start();
-        api.run();
+        System.out.println("siema");
+
+        //api.run();
     }
 }
