@@ -51,6 +51,7 @@ public class Manager implements Runnable {
              ObjectOutputStream outputStream = new ObjectOutputStream(clientSocket.getOutputStream())) {
 
             Request request = (Request) inputStream.readObject();
+            System.out.println(request);
 
             switch (request.getRequestType()) {
                 case "agent_register":

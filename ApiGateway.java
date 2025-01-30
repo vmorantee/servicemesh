@@ -45,11 +45,10 @@ public class ApiGateway implements Runnable {
         try {
             //Polacz sie wlasciwie kurwa z agentem
             agentSocket = new Socket(agentIpAddress, Integer.parseInt(agentPort));
-
             System.out.println("Connected to Service Manager at " + agentIpAddress + ":" + agentPort);
             System.out.println("Api gateway started (run())");
 
-            new Thread(() -> handleClientConnection(agentSocket)).start();
+            //new Thread(() -> handleClientConnection(agentSocket)).start();
 
             try {
                 apiSocket = new ServerSocket(Integer.parseInt(port));
@@ -81,20 +80,36 @@ public class ApiGateway implements Runnable {
                 try {
                     Request clientRequest = (Request) clientInputStream.readObject();
                     System.out.println("Received Request: " + clientRequest);
-                    ServiceConnection serviceConnection = getConnection(clientRequest.getRequestType());
-                    if (serviceConnection == null) {
-                        serviceConnection = establishServiceConnection(clientRequest.getRequestType());
-                        if (serviceConnection == null) {
-                            System.out.println("Service not found for request type: " + clientRequest.getRequestType());
-                            continue;
+                    if (agentSocket != null) {
+                        ObjectOutputStream agentOutput = new ObjectOutputStream(agentSocket.getOutputStream());
+                        agentOutput.writeObject(clientRequest);
+                        agentOutput.flush();
+                        ObjectInputStream agentInput = new ObjectInputStream(agentSocket.getInputStream());
+                        Request agentResponse = null;
+                        try {
+                            agentResponse = (Request) agentInput.readObject();
+                        } catch (ClassNotFoundException e) {
+                            throw new RuntimeException(e); //WYRZUCA TEN ERROR
                         }
+                        System.out.println("ETAP");
+                        clientOutputStream.writeObject(agentResponse);
+                        clientOutputStream.flush();
                     }
 
-                    serviceConnection.getOutputStream().writeObject(clientRequest);
-                    serviceConnection.getOutputStream().flush();
-                    Request serviceResponse = (Request) serviceConnection.getInputStream().readObject();
-                    clientOutputStream.writeObject(serviceResponse);
-                    clientOutputStream.flush();
+//                    ServiceConnection serviceConnection = getConnection(clientRequest.getRequestType());
+//                    if (serviceConnection == null) {
+//                        serviceConnection = establishServiceConnection(clientRequest.getRequestType());
+//                        if (serviceConnection == null) {
+//                            System.out.println("Service not found for request type: " + clientRequest.getRequestType());
+//                            continue;
+//                        }
+//                    }
+//
+//                    serviceConnection.getOutputStream().writeObject(clientRequest);
+//                    serviceConnection.getOutputStream().flush();
+//                    Request serviceResponse = (Request) serviceConnection.getInputStream().readObject();
+//                    clientOutputStream.writeObject(serviceResponse);
+//                    clientOutputStream.flush();
                 } catch (EOFException e) {
                     System.out.println("Client connection closed.");
                     break;
@@ -124,6 +139,10 @@ public class ApiGateway implements Runnable {
             }
         }
         return null;
+    }
+
+    private void forwardToAgent(Request request, ObjectOutputStream outputStream) throws IOException {
+
     }
 
     private ServiceConnection getConnection(String serviceName) {

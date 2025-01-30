@@ -115,9 +115,11 @@ public abstract class Agent implements Runnable {
         try (ObjectInputStream inputStream = new ObjectInputStream(serviceSocket.getInputStream());
              ObjectOutputStream outputStream = new ObjectOutputStream(serviceSocket.getOutputStream())) {
             Request request = (Request) inputStream.readObject();
+            System.out.println(request);
             if (possibleServices.contains(request.getRequestType())) {
                 startServiceFromManager(request);
             } else if ("no_service_available".equals(request.getRequestType())) {
+                System.out.println("Sigma");
                 forwardToManager(request, outputStream);
             } else if ("heartbeat".equals(request.getRequestType())) {
                 heartbeats.put(serviceSocket, request);
