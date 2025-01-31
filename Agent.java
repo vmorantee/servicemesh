@@ -116,14 +116,20 @@ public abstract class Agent implements Runnable {
              ObjectOutputStream outputStream = new ObjectOutputStream(serviceSocket.getOutputStream())) {
             Request request = (Request) inputStream.readObject();
             System.out.println(request);
-            if (possibleServices.contains(request.getRequestType())) {
+            System.out.println("Możliwe serwisy:");
+            for(String serw : possibleServices)
+                    System.out.println(serw);
+            if(possibleServices.contains("ApiGateway"))
+                forwardToManager(request, outputStream);
+            else if (possibleServices.contains(request.getContent("service_type").getEntryContent())) {
                 startServiceFromManager(request);
-            } else if ("no_service_available".equals(request.getRequestType())) {
+            } else if ("no_service_available".equals(request.getContent("service_type").getEntryContent())) {
                 System.out.println("Sigma");
                 forwardToManager(request, outputStream);
-            } else if ("heartbeat".equals(request.getRequestType())) {
+            } else if ("heartbeat".equals(request.getContent("service_type").getEntryContent())) {
                 heartbeats.put(serviceSocket, request);
             }
+            System.out.println("bruh moment");
         } catch (Exception e) {
             System.out.println("Error handling service message: " + e.getMessage());
         }
@@ -147,7 +153,9 @@ public abstract class Agent implements Runnable {
     }
 
     public void startServiceFromManager(Request request) {
+        System.out.println("DLACZEGO NIE WCHODZI DO TRYA");
         try {
+            System.out.println("Wystartuj serwis!!!");
             String serviceType = request.getContent("service_type").entryContent;
             String serviceAddress = request.getContent("service_address").entryContent;
             int servicePort = Integer.parseInt(request.getContent("service_port").entryContent);
@@ -155,15 +163,13 @@ public abstract class Agent implements Runnable {
             Process serviceProcess = processBuilder.start();
             System.out.println("Started service: " + serviceType+serviceAddress+servicePort);
             try{
-                sleep(5000);
+                sleep(1000);
             } catch (Exception e){
                 System.out.println("XD");
             }
-            System.out.println("test");
             // Odczytanie standardowego wyjścia (stdout) procesu
             BufferedReader reader = new BufferedReader(new InputStreamReader(serviceProcess.getInputStream()));
             String line;
-            System.out.println("test");
             while ((line = reader.readLine()) != null) {
                 System.out.println(line);
             }

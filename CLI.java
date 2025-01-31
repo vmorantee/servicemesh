@@ -22,6 +22,7 @@ public class CLI {
             System.out.print("Enter password: ");
             String password = scanner.nextLine();
             Request loginRequest = new Request("register", reqID++);
+            loginRequest.addEntry("service_type", "RegistrationService");
             loginRequest.addEntry("login", username);
             loginRequest.addEntry("password", password);
             ObjectOutputStream outputStream = new ObjectOutputStream(connection.getOutputStream());
@@ -88,6 +89,7 @@ public class CLI {
 
                     while ((bytesRead = bis.read(buffer, 0, buffer.length)) != -1) {
                         Request request = new Request("file_upload", reqID++);
+                        request.addEntry("service_type", "FileUploadService");
                         request.addEntry("username", login);
                         request.addEntry("filename", filename);
                         request.addEntry("total_packages", Integer.toString(totalPackages));
@@ -120,6 +122,7 @@ public class CLI {
             System.out.print("Enter password: ");
             String password = scanner.nextLine();
             Request loginRequest = new Request("Login", reqID++);
+            loginRequest.addEntry("service_type", "LoginService");
             loginRequest.addEntry("login", username);
             loginRequest.addEntry("password", password);
             ObjectOutputStream outputStream = new ObjectOutputStream(connection.getOutputStream());

@@ -178,11 +178,19 @@ public class ApiGateway implements Runnable {
     }
 
     public static void main(String[] args) {
-        System.out.println("siema");
-        ApiGateway api = new ApiGateway(args[0],args[1]);
-        api.setAgentConnectionInfo(args[2], args[3]);
+        ApiGateway api;
+
+        if(args.length == 4)
+        {
+            api = new ApiGateway(args[0],args[1]);
+            api.setAgentConnectionInfo(args[2], args[3]);
+        }
+        else
+        {
+            api = new ApiGateway("127.0.0.1", "8090");
+            api.setAgentConnectionInfo("127.0.0.1", "8086");
+        }
         api.start();
-        System.out.println("siema");
 
         //api.run();
     }
