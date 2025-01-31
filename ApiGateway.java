@@ -43,12 +43,9 @@ public class ApiGateway implements Runnable {
     @Override
     public void run() {
         try {
-            //Polacz sie wlasciwie kurwa z agentem
             agentSocket = new Socket(agentIpAddress, Integer.parseInt(agentPort));
             System.out.println("Connected to Service Manager at " + agentIpAddress + ":" + agentPort);
             System.out.println("Api gateway started (run())");
-
-            //new Thread(() -> handleClientConnection(agentSocket)).start();
 
             try {
                 apiSocket = new ServerSocket(Integer.parseInt(port));
@@ -69,18 +66,19 @@ public class ApiGateway implements Runnable {
     }
 
     private void handleClientConnection(Socket clientSocket) {
-        System.out.println("Dziala?");
-
         try (
                 ObjectInputStream clientInputStream = new ObjectInputStream(clientSocket.getInputStream());
                 ObjectOutputStream clientOutputStream = new ObjectOutputStream(clientSocket.getOutputStream())
         ) {
             while (true) {
-                System.out.println("Dziala?22");
                 try {
                     Request clientRequest = (Request) clientInputStream.readObject();
                     System.out.println("Received Request: " + clientRequest);
-                    if (agentSocket != null) {
+                    ServiceConnection service = activeConnections.get(clientRequest.getContent("service_type").getEntryContent());
+                    if(service != null)
+                        ServeTheClient(clientRequest, service.getSocket(), clientInputStream, clientOutputStream);
+                    
+                    else if (agentSocket != null) {
                         ObjectOutputStream agentOutput = new ObjectOutputStream(agentSocket.getOutputStream());
                         agentOutput.writeObject(clientRequest);
                         agentOutput.flush();
@@ -88,12 +86,10 @@ public class ApiGateway implements Runnable {
                         Request agentResponse = null;
                         try {
                             agentResponse = (Request) agentInput.readObject();
+                            
                         } catch (ClassNotFoundException e) {
-                            throw new RuntimeException(e); //WYRZUCA TEN ERROR
+                            throw new RuntimeException(e);
                         }
-                        System.out.println("ETAP");
-                        clientOutputStream.writeObject(agentResponse);
-                        clientOutputStream.flush();
                     }
 
 //                    ServiceConnection serviceConnection = getConnection(clientRequest.getRequestType());
@@ -121,6 +117,20 @@ public class ApiGateway implements Runnable {
         } catch (Exception e) {
             System.out.println("Error handling client connection: " + e.getMessage());
         }
+    }
+
+    private void ServeTheClient(Request request, Socket serviceSocket, ObjectInputStream clientObjectInputStream, ObjectOutputStream clientObjectOutputStream) throws Exception
+    {
+        ObjectInputStream serviceInput = new ObjectInputStream(serviceSocket.getInputStream());
+        ObjectOutputStream serviceOutput = new ObjectOutputStream(serviceSocket.getOutputStream());
+
+        serviceOutput.writeObject(request);
+        serviceOutput.flush();
+
+        Request response = (Request) serviceInput.readObject();
+
+        clientObjectOutputStream.writeObject(response);
+        clientObjectOutputStream.flush();
     }
 
     private ServiceConnection establishServiceConnection(String serviceName) {
@@ -170,6 +180,11 @@ public class ApiGateway implements Runnable {
 
         public ObjectInputStream getInputStream() {
             return inputStream;
+        }
+
+        public Socket getSocket()
+        {
+            return this.socket;
         }
 
         public boolean isValid() {

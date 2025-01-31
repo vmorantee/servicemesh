@@ -131,7 +131,7 @@ public abstract class Agent implements Runnable {
                 forwardToManager(request, outputStream);
             else if (possibleServices.contains(request.getContent("service_type").getEntryContent())) {
                 startServiceFromManager(request);
-            } else if ("no_service_available".equals(request.getContent("service_type").getEntryContent())) {
+            } else if ("no_service_available".equals(request.getContent("message").getEntryContent())) {
                 System.out.println("Sigma");
                 forwardToManager(request, outputStream);
             } else if ("heartbeat".equals(request.getContent("service_type").getEntryContent())) {
@@ -171,7 +171,7 @@ public abstract class Agent implements Runnable {
             String serviceType = request.getContent("service_type").entryContent;
             String serviceAddress = request.getContent("service_address").entryContent;
             int servicePort = Integer.parseInt(request.getContent("service_port").entryContent);
-            ProcessBuilder processBuilder = new ProcessBuilder("java", "-jar", serviceType + ".jar", serviceAddress, Integer.toString(servicePort), ipAddress, port); //TODO zamienić port na zmienną
+            ProcessBuilder processBuilder = new ProcessBuilder("java", "-jar", serviceType + ".jar", serviceAddress, Integer.toString(servicePort), ipAddress, port);
             Process serviceProcess = processBuilder.start();
             System.out.println("Started service: " + serviceType+serviceAddress+servicePort);
             try{
