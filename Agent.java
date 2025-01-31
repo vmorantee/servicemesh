@@ -72,10 +72,6 @@ public abstract class Agent implements Runnable {
             managerOutput.flush();
             managerOutput.reset();
 
-            Request request = new Request("Huj",2626);
-            request.addEntry("Huj","Dupa");
-            managerOutput.writeObject(request);
-            managerOutput.flush();
             try {
                 Request response = (Request) managerInput.readObject();
                 System.out.println(response);
