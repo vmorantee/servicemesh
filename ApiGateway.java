@@ -76,7 +76,7 @@ public class ApiGateway implements Runnable {
                     System.out.println("Received Request: " + clientRequest);
                     ServiceConnection service = activeConnections.get(clientRequest.getContent("service_type").getEntryContent());
                     if(service != null)
-                        ServeTheClient(clientRequest, service.getSocket(), clientInputStream, clientOutputStream);
+                        ServeTheClient(clientRequest, service, clientInputStream, clientOutputStream);
                     
                     else if (agentSocket != null) {
                         ObjectOutputStream agentOutput = new ObjectOutputStream(agentSocket.getOutputStream());
@@ -86,7 +86,12 @@ public class ApiGateway implements Runnable {
                         Request agentResponse = null;
                         try {
                             agentResponse = (Request) agentInput.readObject();
-                            
+                            SaveNewService(agentResponse);
+                            service = activeConnections.get(clientRequest.getContent("service_type").getEntryContent());
+                            if(service!=null)
+                                ServeTheClient(clientRequest, service, clientInputStream, clientOutputStream);
+                            else
+                                System.out.println("ApiGateway: Something went wrong with newly started service\n" + agentResponse);
                         } catch (ClassNotFoundException e) {
                             throw new RuntimeException(e);
                         }
@@ -119,10 +124,10 @@ public class ApiGateway implements Runnable {
         }
     }
 
-    private void ServeTheClient(Request request, Socket serviceSocket, ObjectInputStream clientObjectInputStream, ObjectOutputStream clientObjectOutputStream) throws Exception
+    private void ServeTheClient(Request request, ServiceConnection service, ObjectInputStream clientObjectInputStream, ObjectOutputStream clientObjectOutputStream) throws Exception
     {
-        ObjectInputStream serviceInput = new ObjectInputStream(serviceSocket.getInputStream());
-        ObjectOutputStream serviceOutput = new ObjectOutputStream(serviceSocket.getOutputStream());
+        ObjectInputStream serviceInput = service.getInputStream();
+        ObjectOutputStream serviceOutput = service.getOutputStream();
 
         serviceOutput.writeObject(request);
         serviceOutput.flush();
@@ -131,6 +136,13 @@ public class ApiGateway implements Runnable {
 
         clientObjectOutputStream.writeObject(response);
         clientObjectOutputStream.flush();
+    }
+
+    private void SaveNewService(Request agentResponse) throws Exception
+    {
+        Socket serviceSocket = new Socket(agentResponse.getContent("ipAddress").getEntryContent(), Integer.parseInt(agentResponse.getContent("port").getEntryContent()));
+        ServiceConnection newService = new ServiceConnection(serviceSocket, new ObjectOutputStream(serviceSocket.getOutputStream()), new ObjectInputStream(serviceSocket.getInputStream()));
+        activeConnections.put(agentResponse.getContent("service_type").getEntryContent(), newService);
     }
 
     private ServiceConnection establishServiceConnection(String serviceName) {
