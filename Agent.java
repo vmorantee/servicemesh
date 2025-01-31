@@ -1,8 +1,4 @@
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
+import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.HashMap;
@@ -23,6 +19,8 @@ public abstract class Agent implements Runnable {
     private String managerIpAddress;
     private int managerPort;
     public abstract String getAgentName();
+    private ObjectOutputStream managerOutput;
+    private  ObjectInputStream managerInput;
 
     public Agent(String ipAddress, String port, String managerIpAddress, int managerPort) {
         this.ipAddress = ipAddress;
@@ -46,6 +44,7 @@ public abstract class Agent implements Runnable {
         // Connect to manager immediately after starting
         connectToManager();
 
+
         isRunning = true;
         possibleServices = fillPossibleServices();
         new Thread(this).start();
@@ -67,9 +66,22 @@ public abstract class Agent implements Runnable {
             registrationRequest.addEntry("services", servicesString);
 
             // Send registration request
-            ObjectOutputStream outputStream = new ObjectOutputStream(managerSocket.getOutputStream());
-            outputStream.writeObject(registrationRequest);
-            outputStream.flush();
+            managerOutput = new ObjectOutputStream(managerSocket.getOutputStream());
+            managerInput = new ObjectInputStream(managerSocket.getInputStream());
+            managerOutput.writeObject(registrationRequest);
+            managerOutput.flush();
+            managerOutput.reset();
+
+            Request request = new Request("Huj",2626);
+            request.addEntry("Huj","Dupa");
+            managerOutput.writeObject(request);
+            managerOutput.flush();
+            try {
+                Request response = (Request) managerInput.readObject();
+                System.out.println(response);
+            } catch (Exception e){
+                System.out.println(e);
+            }
 
             System.out.println("Connected to manager at " + managerIpAddress + ":" + managerPort);
         } catch (IOException e) {
@@ -97,7 +109,7 @@ public abstract class Agent implements Runnable {
             try {
                 sleep(10000);
                 if (managerSocket != null && !heartbeats.isEmpty()) {
-                    ObjectOutputStream outputStream = new ObjectOutputStream(managerSocket.getOutputStream());
+                    ObjectOutputStream outputStream = managerOutput;
                     Request heartbeatReport = new Request("heartbeat_report", 1);
                     for (Request heartbeat : heartbeats.values()) {
                         heartbeatReport.addEntry("heartbeat", heartbeat.toString());
@@ -131,16 +143,20 @@ public abstract class Agent implements Runnable {
             }
             System.out.println("bruh moment");
         } catch (Exception e) {
-            System.out.println("Error handling service message: " + e.getMessage());
+            System.out.println("Error handling service message in handling: " + e.getMessage());
         }
     }
 
     private void forwardToManager(Request request, ObjectOutputStream outputStream) throws IOException {
         if (managerSocket != null) {
-            ObjectOutputStream managerOutput = new ObjectOutputStream(managerSocket.getOutputStream());
+
+
             managerOutput.writeObject(request);
+            System.out.println("Test1");
             managerOutput.flush();
-            ObjectInputStream managerInput = new ObjectInputStream(managerSocket.getInputStream());
+            managerOutput.reset();
+
+            System.out.println("Test2");
             Request managerResponse = null;
             try {
                 managerResponse = (Request) managerInput.readObject();

@@ -47,10 +47,12 @@ public class Manager implements Runnable {
     }
 
     private void handleClientConnection(Socket clientSocket) {
+        System.out.println("Skibidi");
         try (ObjectInputStream inputStream = new ObjectInputStream(clientSocket.getInputStream());
              ObjectOutputStream outputStream = new ObjectOutputStream(clientSocket.getOutputStream())) {
-
+                while(true){
             Request request = (Request) inputStream.readObject();
+            System.out.println(request.getRequestType());
             System.out.println(request);
 
             switch (request.getRequestType()) {
@@ -65,6 +67,7 @@ public class Manager implements Runnable {
                     break;
                 default:
                     sendErrorResponse(outputStream, "Unknown request type");
+            }
             }
         } catch (Exception e) {
             System.out.println("Error handling client connection: " + e.getMessage());

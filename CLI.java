@@ -21,7 +21,7 @@ public class CLI {
             String username = scanner.nextLine();
             System.out.print("Enter password: ");
             String password = scanner.nextLine();
-            Request loginRequest = new Request("register", reqID++);
+            Request loginRequest = new Request("service_request", reqID++);
             loginRequest.addEntry("service_type", "RegistrationService");
             loginRequest.addEntry("login", username);
             loginRequest.addEntry("password", password);
