@@ -162,35 +162,74 @@ public abstract class Agent implements Runnable {
     }
 
     public void startServiceFromManager(Request request) {
+        System.out.println("DLACZEGO NIE WCHODZI DO TRYA");
         try {
+            System.out.println("Wystartuj serwis!!!");
             String serviceType = request.getContent("service_type").entryContent;
             String serviceAddress = request.getContent("service_address").entryContent;
             int servicePort = Integer.parseInt(request.getContent("service_port").entryContent);
-            ProcessBuilder processBuilder = new ProcessBuilder("java", "-jar", serviceType + ".jar", serviceAddress, Integer.toString(servicePort), ipAddress, port);
-            Process serviceProcess = processBuilder.start();
-            System.out.println("Started service: " + serviceType+serviceAddress+servicePort);
-            try{
-                sleep(1000);
-            } catch (Exception e){
-                System.out.println("XD");
+
+            // Ścieżka do pliku .java
+            String javaFilePath = serviceType + ".java"; // np. "ApiGateway.java"
+
+            // 1. Skompiluj plik .java
+            ProcessBuilder compileProcessBuilder = new ProcessBuilder("javac", javaFilePath);
+            compileProcessBuilder.redirectErrorStream(true); // Przekieruj błędy do standardowego wyjścia
+
+            Process compileProcess = compileProcessBuilder.start();
+            int compileExitCode = compileProcess.waitFor(); // Poczekaj na zakończenie kompilacji
+
+            if (compileExitCode != 0) {
+                System.out.println("Compilation failed with exit code: " + compileExitCode);
+                // Odczytaj błędy kompilacji
+                BufferedReader compileErrorReader = new BufferedReader(new InputStreamReader(compileProcess.getErrorStream()));
+                String line;
+                while ((line = compileErrorReader.readLine()) != null) {
+                    System.out.println(line);
+                }
+                return; // Zakończ metodę, jeśli kompilacja się nie powiodła
             }
-            // Odczytanie standardowego wyjścia (stdout) procesu
-            BufferedReader reader = new BufferedReader(new InputStreamReader(serviceProcess.getInputStream()));
+
+            System.out.println("Compilation successful!");
+            compileProcess.destroy();
+            compileProcess.destroyForcibly();
+
+
+            String className = serviceType; // Nazwa klasy (bez .java)
+            ProcessBuilder runProcessBuilder = new ProcessBuilder("java", className, serviceAddress, Integer.toString(servicePort), ipAddress);
+            runProcessBuilder.redirectErrorStream(true); // Przekieruj błędy do standardowego wyjścia
+
+            Process runProcess = runProcessBuilder.start();
+            BufferedReader runOutputReader = new BufferedReader(new InputStreamReader(runProcess.getInputStream()));
             String line;
-            while ((line = reader.readLine()) != null) {
+            while ((line = runOutputReader.readLine()) != null) {
                 System.out.println(line);
             }
-            Socket serviceSocket = newServiceSocket.accept();
-            System.out.println("Service succesfully connected to the agent");
-            Request serviceDetails = new Request("service_started", 1);
-            serviceDetails.addEntry("service_type", serviceType);
-            serviceDetails.addEntry("ipAddress", serviceSocket.getInetAddress().toString());
-            serviceDetails.addEntry("port", Integer.toString(serviceSocket.getPort()));
-            ObjectOutputStream managerOutput = new ObjectOutputStream(managerSocket.getOutputStream());
-            managerOutput.writeObject(serviceDetails);
-            managerOutput.flush();
+
+            System.out.println("Started service: " + serviceType+serviceAddress+servicePort);
+            runProcess.destroy();
+            runProcess.destroyForcibly();
+            // Odczytanie standardowego wyjścia (stdout) procesu
+            //BufferedReader reader = new BufferedReader(new InputStreamReader(serviceProcess.getInputStream()));
+            //String line;
+            //while ((line = reader.readLine()) != null) {
+            //    System.out.println(line);
+            //}
+            //System.out.println("XD");
+            //Socket serviceSocket = newServiceSocket.accept(); // PROBLEM HERE !!!!!!!!!
+            //System.out.println("XD");
+            //System.out.println("Service succesfully connected to the agent");
+            //Request serviceDetails = new Request("service_started", 1);
+            //serviceDetails.addEntry("service_type", serviceType);
+            //serviceDetails.addEntry("service_socket", serviceSocket.getInetAddress().toString() + ":" + serviceSocket.getPort());
+//            ObjectOutputStream managerOutput = new ObjectOutputStream(managerSocket.getOutputStream());
+//            managerOutput.writeObject(serviceDetails);
+//            managerOutput.flush();
+
         } catch (IOException e) {
             System.out.println("Error starting service: " + e.getMessage());
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
         }
     }
 
