@@ -8,6 +8,7 @@ public class Manager implements Runnable {
     private boolean isRunning = false;
     private Map<String, AgentInfo> registeredAgents = new ConcurrentHashMap<>();
     private ExecutorService executorService = Executors.newCachedThreadPool();
+    private int newServicePort = 8101;
 
     // Inner class to store agent information
     private class AgentInfo {
@@ -58,14 +59,11 @@ public class Manager implements Runnable {
                 case "agent_register":
                     registerAgent(request, clientSocket, outputStream);
                     break;
-                case "service_request":
-                    handleServiceRequest(request, outputStream);
-                    break;
                 case "heartbeat_report":
                     processHeartbeatReport(request, clientSocket);
                     break;
                 default:
-                    sendErrorResponse(outputStream, "Unknown request type");
+                    handleServiceRequest(request, outputStream);
             }
             }
         } catch (Exception e) {
@@ -96,8 +94,19 @@ public class Manager implements Runnable {
             Request serviceAllocation = new Request("service_allocation", request.getRequestID());
             serviceAllocation.addEntry("service_type", requiredService);
             serviceAllocation.addEntry("service_address", selectedAgent.ipAddress);
-            serviceAllocation.addEntry("service_port", selectedAgent.port);
-            outputStream.writeObject(serviceAllocation);
+            serviceAllocation.addEntry("service_port", Integer.toString(newServicePort++));
+            Socket agentSocket = new Socket(selectedAgent.ipAddress, Integer.parseInt(selectedAgent.port));
+            ObjectOutputStream agentOutput = new ObjectOutputStream(agentSocket.getOutputStream());
+            ObjectInputStream agentInput = new ObjectInputStream(agentSocket.getInputStream());
+            agentOutput.writeObject(serviceAllocation);
+            agentOutput.flush();
+            try {
+                Request response = (Request) agentInput.readObject();
+                outputStream.writeObject(response);
+                outputStream.flush();
+            } catch (Exception e) {
+                System.out.println(e);
+            }
         } else {
             sendErrorResponse(outputStream, "No agent available for service: " + requiredService);
         }

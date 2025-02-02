@@ -124,13 +124,13 @@ public abstract class Agent implements Runnable {
              ObjectOutputStream outputStream = new ObjectOutputStream(serviceSocket.getOutputStream())) {
             Request request = (Request) inputStream.readObject();
             System.out.println(request);
-            System.out.println("Możliwe serwisy:");
+            System.out.println("Available services:");
             for(String serw : possibleServices)
                     System.out.println(serw);
             if(possibleServices.contains("ApiGateway"))
                 forwardToManager(request, outputStream);
             else if (possibleServices.contains(request.getContent("service_type").getEntryContent())) {
-                startServiceFromManager(request);
+                startServiceFromManager(request, outputStream, inputStream);
             } else if ("no_service_available".equals(request.getContent("message").getEntryContent())) {
                 System.out.println("Sigma");
                 forwardToManager(request, outputStream);
@@ -144,8 +144,6 @@ public abstract class Agent implements Runnable {
 
     private void forwardToManager(Request request, ObjectOutputStream outputStream) throws IOException {
         if (managerSocket != null) {
-
-
             managerOutput.writeObject(request);
             managerOutput.flush();
             managerOutput.reset();
@@ -161,10 +159,8 @@ public abstract class Agent implements Runnable {
         }
     }
 
-    public void startServiceFromManager(Request request) {
-        System.out.println("DLACZEGO NIE WCHODZI DO TRYA");
+    public void startServiceFromManager(Request request, ObjectOutputStream outputStream, ObjectInputStream inputStream) {
         try {
-            System.out.println("Wystartuj serwis!!!");
             System.out.println(request);
             String serviceType = request.getContent("service_type").entryContent;
             String serviceAddress = request.getContent("service_address").entryContent;
@@ -208,8 +204,17 @@ public abstract class Agent implements Runnable {
             }
 
             System.out.println("Started service: " + serviceType+serviceAddress+servicePort);
-            runProcess.destroy();
-            runProcess.destroyForcibly();
+            //runProcess.destroy();
+            //runProcess.destroyForcibly();
+        
+            Request responseToManager = new Request(request.getRequestType(), request.getRequestID());
+            responseToManager.addEntry("service_type", request.getContent("service_type").entryContent);
+            responseToManager.addEntry("service_address", request.getContent("service_address").entryContent);
+            responseToManager.addEntry("service_port", request.getContent("service_port").entryContent);
+
+            outputStream.writeObject(responseToManager);
+            outputStream.flush();
+
             // Odczytanie standardowego wyjścia (stdout) procesu
             //BufferedReader reader = new BufferedReader(new InputStreamReader(serviceProcess.getInputStream()));
             //String line;
@@ -223,9 +228,9 @@ public abstract class Agent implements Runnable {
             //Request serviceDetails = new Request("service_started", 1);
             //serviceDetails.addEntry("service_type", serviceType);
             //serviceDetails.addEntry("service_socket", serviceSocket.getInetAddress().toString() + ":" + serviceSocket.getPort());
-//            ObjectOutputStream managerOutput = new ObjectOutputStream(managerSocket.getOutputStream());
-//            managerOutput.writeObject(serviceDetails);
-//            managerOutput.flush();
+            //ObjectOutputStream managerOutput = new ObjectOutputStream(managerSocket.getOutputStream());
+            //managerOutput.writeObject(serviceDetails);
+            //managerOutput.flush();
 
         } catch (IOException e) {
             System.out.println("Error starting service: " + e.getMessage());
