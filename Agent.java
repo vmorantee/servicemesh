@@ -165,6 +165,7 @@ public abstract class Agent implements Runnable {
         System.out.println("DLACZEGO NIE WCHODZI DO TRYA");
         try {
             System.out.println("Wystartuj serwis!!!");
+            System.out.println(request);
             String serviceType = request.getContent("service_type").entryContent;
             String serviceAddress = request.getContent("service_address").entryContent;
             int servicePort = Integer.parseInt(request.getContent("service_port").entryContent);
