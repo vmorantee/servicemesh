@@ -25,6 +25,15 @@ public class Manager implements Runnable {
             this.lastHeartbeat = System.currentTimeMillis();
             this.availableServices = new ArrayList<>();
         }
+
+        @Override
+        public String toString() {
+            return "AgentInfo{" +
+                    ", ipAddress='" + ipAddress + '\'' +
+                    ", port='" + port + '\'' +
+                    ", availableServices=" + availableServices +
+                    '}';
+        }
     }
 
     public Manager(int port) throws IOException {
@@ -84,6 +93,8 @@ public class Manager implements Runnable {
         outputStream.writeObject(response);
         System.out.println("Agent registered successfully");
         outputStream.flush();
+        System.out.println(ipAddress + ":" + port);
+        System.out.println(agentInfo);
     }
 
     private void handleServiceRequest(Request request, ObjectOutputStream outputStream) throws IOException {

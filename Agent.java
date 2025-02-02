@@ -40,13 +40,14 @@ public abstract class Agent implements Runnable {
         // Existing start method code
         agentSocket = new ServerSocket(Integer.parseInt(this.getPort()));
         newServiceSocket = new ServerSocket(Integer.parseInt(this.getPort())+1);
+        possibleServices = fillPossibleServices();
+
 
         // Connect to manager immediately after starting
         connectToManager();
 
 
         isRunning = true;
-        possibleServices = fillPossibleServices();
         new Thread(this).start();
         System.out.println("Agent started on port: " + this.getPort());
     }
