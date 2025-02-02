@@ -99,7 +99,9 @@ public class Manager implements Runnable {
 
     private void handleServiceRequest(Request request, ObjectOutputStream outputStream) throws IOException {
         String requiredService = request.getContent("service_type").entryContent;
+        System.out.println("Looking for service with: "+ requiredService);
         AgentInfo selectedAgent = findAgentWithService(requiredService);
+        System.out.println("Found: "+selectedAgent);
 
         if (selectedAgent != null) {
             Request serviceAllocation = new Request("service_allocation", request.getRequestID());
