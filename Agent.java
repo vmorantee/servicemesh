@@ -41,12 +41,6 @@ public abstract class Agent implements Runnable {
         agentSocket = new ServerSocket(Integer.parseInt(this.getPort()));
         newServiceSocket = new ServerSocket(Integer.parseInt(this.getPort())+1);
         possibleServices = fillPossibleServices();
-<<<<<<< HEAD
-        System.out.println("Available services:");
-        for(String serw : possibleServices)
-            System.out.println(serw);
-=======
->>>>>>> refs/remotes/origin/yetAnotherBranch
 
 
         // Connect to manager immediately after starting
