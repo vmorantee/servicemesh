@@ -34,10 +34,13 @@ public class Manager implements Runnable {
                     ", availableServices=" + availableServices +
                     '}';
         }
+<<<<<<< HEAD
 
         public List<String> getAvailableServices() {
             return availableServices;
         }
+=======
+>>>>>>> refs/remotes/origin/yetAnotherBranch
     }
 
     public Manager(int port) throws IOException {
