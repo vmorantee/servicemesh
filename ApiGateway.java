@@ -140,7 +140,11 @@ public class ApiGateway implements Runnable {
 
     private void SaveNewService(Request agentResponse) throws Exception
     {
-        Socket serviceSocket = new Socket(agentResponse.getContent("ipAddress").getEntryContent(), Integer.parseInt(agentResponse.getContent("port").getEntryContent()));
+        System.out.println(agentResponse);
+        System.out.println(agentResponse.getContent("service_address").getEntryContent());
+        System.out.println(agentResponse.getContent("service_port").getEntryContent());
+        //Wywala się na następnej linijce (nie tworzy socketu) (DLACZEGO????!!!!) (CONNECTION REFUSED) (BRUH MOMENT)
+        Socket serviceSocket = new Socket(agentResponse.getContent("service_address").getEntryContent(), Integer.parseInt(agentResponse.getContent("service_port").getEntryContent()));
         ServiceConnection newService = new ServiceConnection(serviceSocket, new ObjectOutputStream(serviceSocket.getOutputStream()), new ObjectInputStream(serviceSocket.getInputStream()));
         activeConnections.put(agentResponse.getContent("service_type").getEntryContent(), newService);
     }

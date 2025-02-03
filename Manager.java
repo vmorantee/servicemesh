@@ -25,6 +25,19 @@ public class Manager implements Runnable {
             this.lastHeartbeat = System.currentTimeMillis();
             this.availableServices = new ArrayList<>();
         }
+
+        @Override
+        public String toString() {
+            return "AgentInfo{" +
+                    ", ipAddress='" + ipAddress + '\'' +
+                    ", port='" + port + '\'' +
+                    ", availableServices=" + availableServices +
+                    '}';
+        }
+
+        public List<String> getAvailableServices() {
+            return availableServices;
+        }
     }
 
     public Manager(int port) throws IOException {
@@ -45,6 +58,19 @@ public class Manager implements Runnable {
                 System.out.println("Error accepting client connection: " + e.getMessage());
             }
         }
+    }
+
+    private int findFreePort(int startPort) {
+        int port = startPort;
+        while (port <= 65535) { // Maksymalny zakres portów TCP
+            try (ServerSocket socket = new ServerSocket(port)) {
+                return port; // Jeśli udało się otworzyć, port jest wolny
+            } catch (IOException ignored) {
+                // Port jest zajęty, sprawdzamy następny
+                port++;
+            }
+        }
+        throw new RuntimeException("Nie znaleziono wolnego portu w zakresie od " + startPort + " do 65535");
     }
 
     private void handleClientConnection(Socket clientSocket) {
@@ -84,17 +110,21 @@ public class Manager implements Runnable {
         outputStream.writeObject(response);
         System.out.println("Agent registered successfully");
         outputStream.flush();
+        System.out.println(ipAddress + ":" + port);
+        System.out.println(agentInfo);
     }
 
     private void handleServiceRequest(Request request, ObjectOutputStream outputStream) throws IOException {
         String requiredService = request.getContent("service_type").entryContent;
+        System.out.println("Looking for service with: "+ requiredService);
         AgentInfo selectedAgent = findAgentWithService(requiredService);
+        System.out.println("Found: "+selectedAgent);
 
         if (selectedAgent != null) {
             Request serviceAllocation = new Request("service_allocation", request.getRequestID());
             serviceAllocation.addEntry("service_type", requiredService);
             serviceAllocation.addEntry("service_address", selectedAgent.ipAddress);
-            serviceAllocation.addEntry("service_port", Integer.toString(newServicePort++));
+            serviceAllocation.addEntry("service_port", Integer.toString(findFreePort(8100)));
             Socket agentSocket = new Socket(selectedAgent.ipAddress, Integer.parseInt(selectedAgent.port));
             ObjectOutputStream agentOutput = new ObjectOutputStream(agentSocket.getOutputStream());
             ObjectInputStream agentInput = new ObjectInputStream(agentSocket.getInputStream());
@@ -139,7 +169,7 @@ public class Manager implements Runnable {
 
     private AgentInfo findAgentWithService(String serviceType) {
         return registeredAgents.values().stream()
-                .filter(agent -> agent.availableServices.contains(serviceType))
+                .filter(agent -> agent.getAvailableServices().contains(serviceType))
                 .findFirst()
                 .orElse(null);
     }

@@ -39,7 +39,9 @@ public class RegistrationService extends Microservice implements Runnable {
     public void run() {
         while (isRunning) {
             try {
+                System.out.println("siema");
                 Socket clientSocket = serverSocket.accept();
+                System.out.println("po siema");
                 System.out.println("RegistrationService accepted connection from " + clientSocket.getInetAddress());
                 handleClientConnection(clientSocket);
             } catch (IOException e) {

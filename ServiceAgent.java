@@ -16,9 +16,9 @@ public class ServiceAgent extends Agent{
     @Override
     public Vector<String> fillPossibleServices() {
         Vector<String> possibleServices = new Vector<>();
-        possibleServices.add("Login");
-        possibleServices.add("Register");
-        possibleServices.add("FileUpload");
+        possibleServices.add("LoginService");
+        possibleServices.add("RegistrationService");
+        possibleServices.add("FileUploadService");
         return possibleServices;
     }
 }

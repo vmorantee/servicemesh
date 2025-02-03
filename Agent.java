@@ -40,13 +40,17 @@ public abstract class Agent implements Runnable {
         // Existing start method code
         agentSocket = new ServerSocket(Integer.parseInt(this.getPort()));
         newServiceSocket = new ServerSocket(Integer.parseInt(this.getPort())+1);
+        possibleServices = fillPossibleServices();
+        System.out.println("Available services:");
+        for(String serw : possibleServices)
+            System.out.println(serw);
+
 
         // Connect to manager immediately after starting
         connectToManager();
 
 
         isRunning = true;
-        possibleServices = fillPossibleServices();
         new Thread(this).start();
         System.out.println("Agent started on port: " + this.getPort());
     }
@@ -124,9 +128,6 @@ public abstract class Agent implements Runnable {
              ObjectOutputStream outputStream = new ObjectOutputStream(serviceSocket.getOutputStream())) {
             Request request = (Request) inputStream.readObject();
             System.out.println(request);
-            System.out.println("Available services:");
-            for(String serw : possibleServices)
-                    System.out.println(serw);
             if(possibleServices.contains("ApiGateway"))
                 forwardToManager(request, outputStream);
             else if (possibleServices.contains(request.getContent("service_type").getEntryContent())) {
@@ -198,10 +199,17 @@ public abstract class Agent implements Runnable {
 
             Process runProcess = runProcessBuilder.start();
             BufferedReader runOutputReader = new BufferedReader(new InputStreamReader(runProcess.getInputStream()));
-            String line;
-            while ((line = runOutputReader.readLine()) != null) {
-                System.out.println(line);
-            }
+            new Thread(() -> {
+                String line;
+                while (true) {
+                    try {
+                        if (!((line = runOutputReader.readLine()) != null)) break;
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
+                    }
+                    System.out.println(line);
+                }
+            }).start();
 
             System.out.println("Started service: " + serviceType+serviceAddress+servicePort);
             //runProcess.destroy();
