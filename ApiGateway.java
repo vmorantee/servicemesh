@@ -3,6 +3,8 @@ import java.net.*;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+import static java.lang.Thread.sleep;
+
 public class ApiGateway implements Runnable {
     private String ipAddress, agentIpAddress;
     private String port, agentPort;
@@ -128,6 +130,12 @@ public class ApiGateway implements Runnable {
 
     private void ServeTheClient(Request request, ServiceConnection service, ObjectInputStream clientObjectInputStream, ObjectOutputStream clientObjectOutputStream) throws Exception
     {
+        try{
+            sleep(1000);
+        }
+        catch (Exception e) {
+            System.out.println(e);
+        }
         System.out.println("ApiGateway: Sending the client request to the service");
         System.out.println(request);
         System.out.println("Service info:");
