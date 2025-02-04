@@ -97,6 +97,8 @@ public class ApiGateway implements Runnable {
                         }
                     }
 
+                    clientSocket.close();
+
 //                    ServiceConnection serviceConnection = getConnection(clientRequest.getRequestType());
 //                    if (serviceConnection == null) {
 //                        serviceConnection = establishServiceConnection(clientRequest.getRequestType());
@@ -126,8 +128,16 @@ public class ApiGateway implements Runnable {
 
     private void ServeTheClient(Request request, ServiceConnection service, ObjectInputStream clientObjectInputStream, ObjectOutputStream clientObjectOutputStream) throws Exception
     {
-        ObjectInputStream serviceInput = service.getInputStream();
-        ObjectOutputStream serviceOutput = service.getOutputStream();
+        System.out.println("ApiGateway: Sending the client request to the service");
+        System.out.println(request);
+        System.out.println("Service info:");
+        System.out.println(service.getAddress());
+        System.out.println(service.getPort());
+        //ObjectInputStream serviceInput = service.getInputStream();
+        //ObjectOutputStream serviceOutput = service.getOutputStream();
+        Socket serviceSocket = new Socket(service.getAddress(), service.getPort());
+        ObjectInputStream serviceInput = new ObjectInputStream(serviceSocket.getInputStream());
+        ObjectOutputStream serviceOutput = new ObjectOutputStream(serviceSocket.getOutputStream());
 
         serviceOutput.writeObject(request);
         serviceOutput.flush();
@@ -136,19 +146,29 @@ public class ApiGateway implements Runnable {
 
         clientObjectOutputStream.writeObject(response);
         clientObjectOutputStream.flush();
+
+        serviceSocket.close();
     }
 
     private void SaveNewService(Request agentResponse) throws Exception
     {
+        System.out.println("ApiGateway: Saving new service to the list");
         System.out.println(agentResponse);
         System.out.println(agentResponse.getContent("service_address").getEntryContent());
         System.out.println(agentResponse.getContent("service_port").getEntryContent());
         //Wywala się na następnej linijce (nie tworzy socketu) (DLACZEGO????!!!!) (CONNECTION REFUSED) (BRUH MOMENT)
-        Socket serviceSocket = new Socket(agentResponse.getContent("service_address").getEntryContent(), Integer.parseInt(agentResponse.getContent("service_port").getEntryContent()));
-        ServiceConnection newService = new ServiceConnection(serviceSocket, new ObjectOutputStream(serviceSocket.getOutputStream()), new ObjectInputStream(serviceSocket.getInputStream()));
+        //Socket serviceSocket = new Socket(agentResponse.getContent("service_address").getEntryContent(), Integer.parseInt(agentResponse.getContent("service_port").getEntryContent()));
+        //ServiceConnection newService = new ServiceConnection(serviceSocket, new ObjectOutputStream(serviceSocket.getOutputStream()), new ObjectInputStream(serviceSocket.getInputStream()));
+        ServiceConnection newService = new ServiceConnection(agentResponse.getContent("service_address").getEntryContent(), Integer.parseInt(agentResponse.getContent("service_port").getEntryContent()));
         activeConnections.put(agentResponse.getContent("service_type").getEntryContent(), newService);
+
+        activeConnections.forEach((key, value) -> {
+            System.out.println("Key: " + key + ", Value: " + value);
+        });
+
     }
 
+    /*
     private ServiceConnection establishServiceConnection(String serviceName) {
         for (Microservice service : Microservice.getInstances()) {
             if (service.getServiceName().equals(serviceName)) {
@@ -166,6 +186,7 @@ public class ApiGateway implements Runnable {
         }
         return null;
     }
+    */
 
     private void forwardToAgent(Request request, ObjectOutputStream outputStream) throws IOException {
 
@@ -173,12 +194,32 @@ public class ApiGateway implements Runnable {
 
     private ServiceConnection getConnection(String serviceName) {
         ServiceConnection connection = activeConnections.get(serviceName);
-        if (connection != null && connection.isValid()) {
+        /*if (connection != null && connection.isValid()) {
             return connection;
-        }
-        activeConnections.remove(serviceName);
-        return null;
+        }*/
+        //activeConnections.remove(serviceName);
+        return connection;
     }
+
+    private static class ServiceConnection {
+        private String address;
+        private int port;
+
+        public ServiceConnection(String address, int port)
+        {
+            this.address = address;
+            this.port = port;
+        }
+
+        public int getPort() {
+            return port;
+        }
+
+        public String getAddress() {
+            return address;
+        }
+    }
+    /*
     private static class ServiceConnection {
         private Socket socket;
         private ObjectOutputStream outputStream;
@@ -207,6 +248,7 @@ public class ApiGateway implements Runnable {
             return socket != null && !socket.isClosed();
         }
     }
+    */
 
     public static void main(String[] args) {
         ApiGateway api;
