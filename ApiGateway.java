@@ -144,8 +144,8 @@ public class ApiGateway implements Runnable {
         //ObjectInputStream serviceInput = service.getInputStream();
         //ObjectOutputStream serviceOutput = service.getOutputStream();
         Socket serviceSocket = new Socket(service.getAddress(), service.getPort());
-        ObjectInputStream serviceInput = new ObjectInputStream(serviceSocket.getInputStream());
         ObjectOutputStream serviceOutput = new ObjectOutputStream(serviceSocket.getOutputStream());
+        ObjectInputStream serviceInput = new ObjectInputStream(serviceSocket.getInputStream());
 
         serviceOutput.writeObject(request);
         serviceOutput.flush();
