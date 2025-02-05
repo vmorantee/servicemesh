@@ -10,13 +10,27 @@ public class CLI {
     private boolean isLogged=false;
     private int reqID=1;
     private String login=null;
+    private Socket connection;
+    private ObjectInputStream inputStream = null;
+    private ObjectOutputStream outputStream = null;
     public CLI(String apiIP,String apiPort) {
         this.apiIP=apiIP;
         this.apiPort=apiPort;
         this.scanner = new Scanner(System.in);
     }
-    public void registrationLogic(Socket connection){
+    public void registrationLogic(){
         try{
+            if(inputStream == null && outputStream == null)
+            {
+                try
+                {
+                    outputStream = new ObjectOutputStream(connection.getOutputStream());
+                    inputStream = new ObjectInputStream(connection.getInputStream());
+                } catch(Exception e)
+                {
+                    System.out.println(e);
+                }
+            }
             System.out.print("Enter username: ");
             String username = scanner.nextLine();
             System.out.print("Enter password: ");
@@ -25,8 +39,7 @@ public class CLI {
             loginRequest.addEntry("service_type", "RegistrationService");
             loginRequest.addEntry("login", username);
             loginRequest.addEntry("password", password);
-            ObjectOutputStream outputStream = new ObjectOutputStream(connection.getOutputStream());
-            ObjectInputStream inputStream = new ObjectInputStream(connection.getInputStream());
+            System.out.println(loginRequest);
             outputStream.writeObject(loginRequest);
             outputStream.flush();
             Request response = (Request) inputStream.readObject();
@@ -41,34 +54,44 @@ public class CLI {
         }
     }
     public void start() {
-        Socket connection = null;
-        while(true){
         try{
             connection = new Socket(apiIP,Integer.parseInt(apiPort));
         }catch (Exception e){
             System.out.println("Error " + e);
         }
         if (connection != null) {
+            while (true) {
+                System.out.println("Welcome to the CLI!\n1-Login\n2-Register");
+                String option = scanner.nextLine();
+                switch (option) {
+                    case "1":
+                        loginLogic();
+                        break;
+                    case "2":
+                        registrationLogic();
+                    case "3":
+                        uploadLogic();
+                        break;
 
-            System.out.println("Welcome to the CLI!\n1-Login\n2-Register");
-            String option = scanner.nextLine();
-            switch (option) {
-                case "1":
-                    loginLogic(connection);
-                    break;
-                case "2":
-                    registrationLogic(connection);
-                case "3":
-                    uploadLogic(connection);
-                    break;
 
-
-            }}
+                }
+            }
         }
 
     }
-    public void uploadLogic(Socket connection){
+    public void uploadLogic(){
         if (login != null) {
+            if(inputStream == null && outputStream == null)
+            {
+                try
+                {
+                    outputStream = new ObjectOutputStream(connection.getOutputStream());
+                    inputStream = new ObjectInputStream(connection.getInputStream());
+                } catch(Exception e)
+                {
+                    System.out.println(e);
+                }
+            }
             System.out.println("Write the name of the file you want to upload:");
             String filename = scanner.nextLine();
             File file = new File(filename);
@@ -84,8 +107,6 @@ public class CLI {
                     int currentPackage = 1;
                     int totalPackages = (int) Math.ceil((double) fileSize / chunkSize);
                     System.out.println("Beginning to send file in " + totalPackages + " packages...");
-                    ObjectOutputStream outputStream = new ObjectOutputStream(connection.getOutputStream());
-                    ObjectInputStream inputStream = new ObjectInputStream(connection.getInputStream());
 
                     while ((bytesRead = bis.read(buffer, 0, buffer.length)) != -1) {
                         Request request = new Request("file_upload", reqID++);
@@ -115,8 +136,19 @@ public class CLI {
             System.out.println("Only logged-in users can upload files.");
         }
     }
-    public void loginLogic(Socket connection){
+    public void loginLogic(){
         try {
+            if(inputStream == null && outputStream == null)
+            {
+                try
+                {
+                    outputStream = new ObjectOutputStream(connection.getOutputStream());
+                    inputStream = new ObjectInputStream(connection.getInputStream());
+                } catch(Exception e)
+                {
+                    System.out.println(e);
+                }
+            }
             System.out.print("Enter username: ");
             String username = scanner.nextLine();
             System.out.print("Enter password: ");
@@ -125,8 +157,6 @@ public class CLI {
             loginRequest.addEntry("service_type", "LoginService");
             loginRequest.addEntry("login", username);
             loginRequest.addEntry("password", password);
-            ObjectOutputStream outputStream = new ObjectOutputStream(connection.getOutputStream());
-            ObjectInputStream inputStream = new ObjectInputStream(connection.getInputStream()); // TU PROBLEM
             outputStream.writeObject(loginRequest);
             outputStream.flush();
             Request response = (Request) inputStream.readObject();

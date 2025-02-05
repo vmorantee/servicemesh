@@ -74,6 +74,7 @@ public class ApiGateway implements Runnable {
         ) {
             while (true) {
                 try {
+                    System.out.println("ApiGateway: Awaiting request");
                     Request clientRequest = (Request) clientInputStream.readObject();
                     System.out.println("Received Request: " + clientRequest);
                     ServiceConnection service = activeConnections.get(clientRequest.getContent("service_type").getEntryContent());
@@ -98,8 +99,6 @@ public class ApiGateway implements Runnable {
                             throw new RuntimeException(e);
                         }
                     }
-
-                    clientSocket.close();
 
 //                    ServiceConnection serviceConnection = getConnection(clientRequest.getRequestType());
 //                    if (serviceConnection == null) {
