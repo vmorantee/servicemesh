@@ -70,6 +70,7 @@ public class CLI {
                         break;
                     case "2":
                         registrationLogic();
+                        break;
                     case "3":
                         uploadLogic();
                         break;
