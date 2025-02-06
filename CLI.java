@@ -174,16 +174,6 @@ public class CLI {
         }
     }
     public static void main(String[] args) {
-        RegistrationService r = new RegistrationService("127.0.0.1","8082");
-        FileUploadService fus = new FileUploadService("127.0.0.1","8083");
-        try {
-            r.start();
-            fus.start();
-
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-        System.out.println(fus);
         CLI cli = new CLI("127.0.0.1","8090");
         cli.start();
     }
