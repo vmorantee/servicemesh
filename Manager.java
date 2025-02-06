@@ -163,9 +163,9 @@ public class Manager implements Runnable {
     private void monitorAgentHeartbeats() {
         while (isRunning) {
             long currentTime = System.currentTimeMillis();
-            registeredAgents.entrySet().removeIf(entry ->
-                    currentTime - entry.getValue().lastHeartbeat > 30000 // 30 seconds timeout
-            );
+//            registeredAgents.entrySet().removeIf(entry ->
+//                    currentTime - entry.getValue().lastHeartbeat > 30000 // 30 seconds timeout
+//            );
 
             try {
                 Thread.sleep(10000); // Check every 10 seconds
@@ -176,6 +176,8 @@ public class Manager implements Runnable {
     }
 
     private AgentInfo findAgentWithService(String serviceType) {
+        System.out.println("FINDER LOOKS: " + serviceType);
+        System.out.println(Arrays.asList(registeredAgents));
         return registeredAgents.values().stream()
                 .filter(agent -> agent.getAvailableServices().contains(serviceType))
                 .findFirst()
