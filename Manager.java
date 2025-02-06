@@ -126,17 +126,25 @@ public class Manager implements Runnable {
             serviceAllocation.addEntry("service_address", selectedAgent.ipAddress);
             serviceAllocation.addEntry("service_port", Integer.toString(findFreePort(8100)));
             Socket agentSocket = new Socket(selectedAgent.ipAddress, Integer.parseInt(selectedAgent.port));
+            System.out.println("Connected to found agent");
             ObjectOutputStream agentOutput = new ObjectOutputStream(agentSocket.getOutputStream());
             ObjectInputStream agentInput = new ObjectInputStream(agentSocket.getInputStream());
+            System.out.println("Connection streams created");
             agentOutput.writeObject(serviceAllocation);
             agentOutput.flush();
+            System.out.println("Request sent");
             try {
                 Request response = (Request) agentInput.readObject();
+                System.out.println("Agent response:\n"+response);
                 outputStream.writeObject(response);
                 outputStream.flush();
+                System.out.println("Response sent to API Agent");
             } catch (Exception e) {
                 System.out.println(e);
             }
+            agentOutput.close();
+            agentInput.close();
+            agentSocket.close();
         } else {
             sendErrorResponse(outputStream, "No agent available for service: " + requiredService);
         }

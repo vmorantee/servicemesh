@@ -15,7 +15,6 @@ public abstract class Agent implements Runnable {
     private HashMap<Socket, Request> heartbeats = new HashMap<>();
     private Socket managerSocket;
     private ServerSocket agentSocket;
-    private ServerSocket newServiceSocket;
     private String managerIpAddress;
     private int managerPort;
     public abstract String getAgentName();
@@ -39,8 +38,11 @@ public abstract class Agent implements Runnable {
     public void start() throws IOException {
         // Existing start method code
         agentSocket = new ServerSocket(Integer.parseInt(this.getPort()));
-        newServiceSocket = new ServerSocket(Integer.parseInt(this.getPort())+1);
         possibleServices = fillPossibleServices();
+        System.out.println("Possible services:");
+        for(String serw : possibleServices)
+            System.out.print(serw+"\t");
+        System.out.println("");
 
 
         // Connect to manager immediately after starting
@@ -123,17 +125,20 @@ public abstract class Agent implements Runnable {
     private void handleServiceMessage(Socket serviceSocket) {
         try (ObjectInputStream inputStream = new ObjectInputStream(serviceSocket.getInputStream());
              ObjectOutputStream outputStream = new ObjectOutputStream(serviceSocket.getOutputStream())) {
-            Request request = (Request) inputStream.readObject();
-            System.out.println(request);
-            if(possibleServices.contains("ApiGateway"))
-                forwardToManager(request, outputStream);
-            else if (possibleServices.contains(request.getContent("service_type").getEntryContent())) {
-                startServiceFromManager(request, outputStream, inputStream);
-            } else if ("no_service_available".equals(request.getContent("message").getEntryContent())) {
-                System.out.println("Sigma");
-                forwardToManager(request, outputStream);
-            } else if ("heartbeat".equals(request.getContent("service_type").getEntryContent())) {
-                heartbeats.put(serviceSocket, request);
+            while(true)
+            {
+                Request request = (Request) inputStream.readObject();
+                System.out.println(request);
+                if(possibleServices.contains("ApiGateway"))
+                    forwardToManager(request, outputStream);
+                else if (possibleServices.contains(request.getContent("service_type").getEntryContent())) {
+                    startServiceFromManager(request, outputStream, inputStream);
+                } else if ("no_service_available".equals(request.getContent("message").getEntryContent())) {
+                    System.out.println("Sigma");
+                    forwardToManager(request, outputStream);
+                } else if ("heartbeat".equals(request.getContent("service_type").getEntryContent())) {
+                    heartbeats.put(serviceSocket, request);
+                }
             }
         } catch (Exception e) {
             System.out.println("Error handling service message in handling: " + e.getMessage());
@@ -160,6 +165,7 @@ public abstract class Agent implements Runnable {
     public void startServiceFromManager(Request request, ObjectOutputStream outputStream, ObjectInputStream inputStream) {
         try {
             System.out.println(request);
+            System.out.println("Service agent: Attempting to start the service");
             String serviceType = request.getContent("service_type").entryContent;
             String serviceAddress = request.getContent("service_address").entryContent;
             int servicePort = Integer.parseInt(request.getContent("service_port").entryContent);
@@ -168,11 +174,14 @@ public abstract class Agent implements Runnable {
             String javaFilePath = serviceType + ".java"; // np. "ApiGateway.java"
 
             // 1. Skompiluj plik .java
+            System.out.println("Service Agent: Starting process builder");
             ProcessBuilder compileProcessBuilder = new ProcessBuilder("javac", javaFilePath);
             compileProcessBuilder.redirectErrorStream(true); // Przekieruj błędy do standardowego wyjścia
 
+            System.out.println("Service Agent: Attempting compilation");
             Process compileProcess = compileProcessBuilder.start();
             int compileExitCode = compileProcess.waitFor(); // Poczekaj na zakończenie kompilacji
+            System.out.println("Service Agent: Compilation finished");
 
             if (compileExitCode != 0) {
                 System.out.println("Compilation failed with exit code: " + compileExitCode);

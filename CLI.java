@@ -39,7 +39,6 @@ public class CLI {
             loginRequest.addEntry("service_type", "RegistrationService");
             loginRequest.addEntry("login", username);
             loginRequest.addEntry("password", password);
-            System.out.println(loginRequest);
             outputStream.writeObject(loginRequest);
             outputStream.flush();
             Request response = (Request) inputStream.readObject();

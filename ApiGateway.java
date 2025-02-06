@@ -10,6 +10,8 @@ public class ApiGateway implements Runnable {
     private String port, agentPort;
     private boolean isRunning;
     private Socket agentSocket;
+    private ObjectOutputStream agentOutput;
+    private ObjectInputStream agentInput;
     private ServerSocket apiSocket;
     private Map<String, ServiceConnection> activeConnections = new ConcurrentHashMap<>();
 
@@ -46,6 +48,8 @@ public class ApiGateway implements Runnable {
     public void run() {
         try {
             agentSocket = new Socket(agentIpAddress, Integer.parseInt(agentPort));
+            agentOutput = new ObjectOutputStream(agentSocket.getOutputStream());
+            agentInput = new ObjectInputStream(agentSocket.getInputStream());
             System.out.println("Connected to Service Manager at " + agentIpAddress + ":" + agentPort);
             System.out.println("Api gateway started (run())");
 
@@ -82,10 +86,9 @@ public class ApiGateway implements Runnable {
                         ServeTheClient(clientRequest, service, clientInputStream, clientOutputStream);
                     
                     else if (agentSocket != null) {
-                        ObjectOutputStream agentOutput = new ObjectOutputStream(agentSocket.getOutputStream());
                         agentOutput.writeObject(clientRequest);
                         agentOutput.flush();
-                        ObjectInputStream agentInput = new ObjectInputStream(agentSocket.getInputStream());
+                        agentOutput.reset();
                         Request agentResponse = null;
                         try {
                             agentResponse = (Request) agentInput.readObject();
@@ -148,11 +151,13 @@ public class ApiGateway implements Runnable {
 
         serviceOutput.writeObject(request);
         serviceOutput.flush();
+        serviceOutput.reset();
 
         Request response = (Request) serviceInput.readObject();
 
         clientObjectOutputStream.writeObject(response);
         clientObjectOutputStream.flush();
+        clientObjectOutputStream.reset();
 
         serviceSocket.close();
     }
