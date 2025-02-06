@@ -21,4 +21,13 @@ public class ServiceAgent extends Agent{
         possibleServices.add("FileUploadService");
         return possibleServices;
     }
+
+    public static void main(String[] args) {
+        ServiceAgent ServiceAgent = new ServiceAgent("127.0.0.1","8100","127.0.0.1",8000,1);
+        try {
+            ServiceAgent.start();
+        } catch (Exception e) {
+            System.out.println(e);
+        }
+    }
 }
