@@ -61,6 +61,8 @@ public class CLI {
         if (connection != null) {
             while (true) {
                 System.out.println("Welcome to the CLI!\n1-Login\n2-Register");
+                if(isLogged)
+                    System.out.println("3-Upload a file");
                 String option = scanner.nextLine();
                 switch (option) {
                     case "1":
