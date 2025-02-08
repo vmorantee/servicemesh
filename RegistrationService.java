@@ -39,11 +39,15 @@ public class RegistrationService extends Microservice implements Runnable {
     public void run() {
         while (isRunning) {
             try {
+                System.out.println("RegistrationService listening on port " + this.getPort());
                 Socket clientSocket = serverSocket.accept();
-                System.out.println("RegistrationService accepted connection from " + clientSocket.getInetAddress());
-                handleClientConnection(clientSocket);
+                System.out.println("RegistrationService accepted connection from " + clientSocket.getInetAddress() + ":" + clientSocket.getPort());
+
+                new Thread(() -> handleClientConnection(clientSocket)).start();
             } catch (IOException e) {
-                System.out.println("Error accepting connection: " + e.getMessage());
+                if (isRunning) {
+                    System.out.println("Error accepting connection: " + e.getMessage());
+                }
             }
         }
     }
@@ -53,6 +57,7 @@ public class RegistrationService extends Microservice implements Runnable {
                 ObjectInputStream objectInputStream = new ObjectInputStream(clientSocket.getInputStream());
                 ObjectOutputStream objectOutputStream = new ObjectOutputStream(clientSocket.getOutputStream())
         ) {
+            System.out.println("Registration: Awaiting request");
             Request request = (Request) objectInputStream.readObject();
             System.out.println("Received registration request: " + request);
             Request response = new Request(request.getRequestType(), request.getRequestID());
@@ -97,6 +102,15 @@ public class RegistrationService extends Microservice implements Runnable {
             } catch (IOException e) {
                 System.out.println("Error closing client socket in RegistrationService: " + e.getMessage());
             }
+        }
+    }
+
+    public static void main(String[] args) {
+        RegistrationService rs = new RegistrationService(args[0],args[1]);
+        try {
+            rs.start();
+        } catch (Exception e){
+            System.out.println(e);
         }
     }
 }
